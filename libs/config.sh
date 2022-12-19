@@ -18,6 +18,7 @@ MySQLConn="mysql -h mysql -uroot -pmagento"
 
 source ${V_PATH}/.env
 source ${V_LIBS_PATH}/color.sh
+source ${V_LIBS_PATH}/logo.sh
 source ${V_LIBS_PATH}/menu.sh
 source ${V_LIBS_PATH}/notify.sh
 source ${V_LIBS_PATH}/common.sh

@@ -1,6 +1,6 @@
 #!/bin/bash
-
 ShowMenu() {
+    echo -e "$LOGO"
     echo -e "     $B_BLUE               Magento 2               $NC"
     echo ""
     echo -e "          [1] Verificar pacotes necessarios"
