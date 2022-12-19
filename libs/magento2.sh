@@ -155,29 +155,7 @@ importDump() {
 }
 
 M2InstallStore() {
-  NotifyAsk "Digite o nome da loja no Bitbucket (exemplo: minerva):"
-  read G_NAME
-  gitSearchM2Store
-  GIT_URL="git@gitlab.com:bis2bis/m2/lojas/$G_NAME.git"
-  echo ""
-  M2Install
-}
-
-M2Install() {
-  M2CloneNew
-  M2Composer install
-  M2Config
-  M2Dump
-  AddHost ${P_NAME}
-
-  NotifySuccess "Magento 2 instalado https://$P_NAME.loc/admin"
-
-  Notify "
-        Login: admin
-        Senha: admin123"
-
-  unset P_NAME
-  unset GIT_URL
+  
 }
 
 ReadHost() {
