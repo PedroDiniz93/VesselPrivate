@@ -26,6 +26,10 @@ VerifyN98MageRun() {
   [[ -f /usr/local/bin/n98-magerun2.phar ]] && return 0 || return 1
 }
 
+VerifyGit() {
+  which "git" | grep -o "git" > /dev/null &&  return 0 || return 1
+}
+
 verifyPackages() {
   if VerifyPHP "$1" == 0 ; then echo -e "$B_GRE $PHP_VERSION Installed $NC"; else echo -e "$B_RED $PHP_VERSION Not Installed $NC"; fi
   if VerifyPHPExtension "bcmath" "$1" == 0 ; then echo -e "$B_GRE $PHP_VERSION-bcmath Installed $NC"; else echo -e "$B_RED $PHP_VERSION-bcmath Not Installed $NC"; fi
@@ -42,15 +46,16 @@ verifyPackages() {
   if VerifyPHPExtension "soap" "$1" == 0 ; then echo -e "$B_GRE $PHP_VERSION-soap Installed $NC"; else echo -e "$B_RED $PHP_VERSION-soap Not Installed $NC"; fi
   if VerifyPHPExtension "xml" "$1" == 0 ; then echo -e "$B_GRE $PHP_VERSION-xml Installed $NC"; else echo -e "$B_RED $PHP_VERSION-xml Not Installed $NC"; fi
   if VerifyPHPExtension "zip" "$1" == 0 ; then echo -e "$B_GRE $PHP_VERSION-zip Installed $NC"; else echo -e "$B_RED $PHP_VERSION-zip Not Installed $NC"; fi
-  if VerifyComposer "$1" == 0 ; then echo -e "$B_GRE Composer Installed $NC"; else echo -e "$B_RED Composer Not Installed $NC"; fi
+  if VerifyComposer "$1" == 0 ; then echo -e "$B_GRE Composer Installed $NC"; else echo -e "$B_RED Composer Not Installed, execute commands to install: $NC"; echo -e " curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php"; echo -e ' HASH="curl -sS https://composer.github.io/installer.sig"'; echo -e ' php -r "if (hash_file("SHA384", "/tmp/composer-setup.php") === "$HASH") { echo "Installer verified"; } else { echo "Installer corrupt"; unlink("composer-setup.php"); } echo PHP_EOL;"'; fi
   if VerifyDocker "$1" == 0 ; then echo -e "$B_GRE Docker Installed $NC"; else echo -e "$B_RED Docker Not Installed $NC"; fi
-  if VerifyDockerCompose "$1" == 0 ; then echo -e "$B_GRE Docker Compose Installed $NC"; else echo -e "$B_RED Docker Compose Not Installed $NC"; fi
-  if VerifyN98MageRun "$1" == 0 ; then echo -e "$B_GRE n98-magerun2 Installed $NC"; else echo -e "$B_RED n98-magerun2 Not Installed $NC"; fi
+  if VerifyDockerCompose "$1" == 0 ; then echo -e "$B_GRE Docker Compose Installed $NC"; else echo -e "$B_RED Docker Compose Not Installed, execute commands to install: $NC"; echo -e " sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose"; echo -e " sudo chmod +x /usr/local/bin/docker-compose"; echo -e " docker-compose --version";  fi
+  if VerifyN98MageRun "$1" == 0 ; then echo -e "$B_GRE n98-magerun2 Installed $NC"; else echo -e "$B_RED n98-magerun2 Not Installed, execute commands to install: $NC"; echo -e " wget https://files.magerun.net/n98-magerun2.phar"; echo -e " chmod +x ./n98-magerun2.phar"; echo -e " sudo cp ./n98-magerun2.phar /usr/local/bin/"; echo -e " n98-magerun2.phar –version"; fi
+  if VerifyGit "$1" == 1 ; then echo -e "$B_GRE Git Installed $NC"; else echo -e "$B_RED Git Not Installed, execute command: sudo apt install git $NC"; fi
 }
 
 MinervaStart() {
   Notify "Inicializando containers do Magento 2 Minerva"
-  cd "$MINERVA_PROJECT" && sudo apachectl stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
+  cd "$MINERVA_PROJECT" && sudo apachectl && stop service mysql stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
 }
 
 MinervaStop() {
@@ -102,13 +107,20 @@ Dump() {
       fi
     ;;
   esac
-
-
 }
 
 clearDocker() {
-  Notify "Removendo tudo dos containers"
-  sudo docker system prune --all --force --volumes
+  NotifyAsk "Deseja realmente remover os containers? y/n:"
+  read -t "$WAIT_TIME" YoN
+  case "$YoN" in
+    y|Y)
+      Notify "Removendo tudo dos containers"
+      sudo docker system prune --all --force --volumes
+    ;;
+    n|N)
+      GoHome
+    ;;
+  esac
 }
 
 importDump() {
@@ -142,7 +154,7 @@ importDump() {
 
 }
 
-M2InstallStore(){
+M2InstallStore() {
   NotifyAsk "Digite o nome da loja no Bitbucket (exemplo: minerva):"
   read G_NAME
   gitSearchM2Store
@@ -151,7 +163,7 @@ M2InstallStore(){
   M2Install
 }
 
-M2Install(){
+M2Install() {
   M2CloneNew
   M2Composer install
   M2Config
@@ -168,7 +180,7 @@ M2Install(){
   unset GIT_URL
 }
 
-ReadHost(){
+ReadHost() {
   NotifyAsk "Digite o nome do host (Ex: magento2.docker)"
   read G_NAME
   AddHost "$G_NAME"
