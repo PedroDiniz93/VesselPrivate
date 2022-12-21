@@ -7,6 +7,7 @@ cd ${V_PATH}
 source ./libs/config.sh
 
 Main() {
+  cd ${V_PATH}
   CleanVars && clear && sleep 0.2 && ShowMenu
 
   NotifyAsk "Digite o comando (exemplo: 1):"
@@ -40,6 +41,10 @@ Main() {
 
     7|u)
       clear && ReadHost && GoHome
+    ;;
+
+    8|i)
+        clear && ConfigAch && GoHome
     ;;
 
     99)

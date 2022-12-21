@@ -10,5 +10,6 @@ ShowMenu() {
     echo -e "          [5] Acessar container via ssh"
     echo -e " $YELLOW         [6] Instalar do zero loja minerva (Em Dev) $NC"
     echo -e "          [7] Adicionar loja /etc/hosts"
+    echo -e "          [8] Configurar env & docker-compose"
     echo -e " $B_RED         [99] Zerar todo o docker  $NC"
 }

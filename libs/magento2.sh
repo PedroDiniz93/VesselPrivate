@@ -55,7 +55,7 @@ verifyPackages() {
 
 MinervaStart() {
   Notify "Inicializando containers do Magento 2 Minerva"
-  cd "$MINERVA_PROJECT" && sudo apachectl && stop service mysql stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
+  cd "$MINERVA_PROJECT" && apachectl stop && sudo service mysql stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
 }
 
 MinervaStop() {
@@ -154,10 +154,6 @@ importDump() {
 
 }
 
-M2InstallStore() {
-  
-}
-
 ReadHost() {
   NotifyAsk "Digite o nome do host (Ex: magento2.docker)"
   read G_NAME
@@ -176,4 +172,13 @@ AddHost() {
   else
     NotifyInfo "Host já existente"
   fi
+}
+
+ConfigAch() {
+  Notify "Configurando docker-compose.yml & env.php"
+  cd utils
+  cp docker-compose.yml "$MINERVA_PROJECT"/docker-compose.yml
+  sleep 1
+  cp env.php "$MINERVA_PROJECT"/app/etc/env.php
+  NotifySuccess "Configurado!"
 }
