@@ -130,7 +130,7 @@ importDump() {
   if [ -f "$FILE" ]; then
     cd "${MINERVA_PROJECT}" && sed -i 's/DEFINER=[^*]*\*/\*/g' "$FILE"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar db:import "$FILE"
-    docker exec -it minerva-magento2_fpm_1 /bin/bash -c "bin/magento s:up && bin/magento s:di:c && bin/magento ind:rei"
+    CommandsCompile
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/unsecure/base_url "$URL_LOCAL"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/secure/base_url "$URL_LOCAL"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/unsecure/base_link_url "$URL_LOCAL"
@@ -181,4 +181,9 @@ ConfigAch() {
   sleep 1
   cp env.php "$MINERVA_PROJECT"/app/etc/env.php
   NotifySuccess "Configurado!"
+}
+
+CommandsCompile() {
+  Notify "Executando s:up, s:di:c e ind:rei"
+  docker exec -it minerva-magento2_fpm_1 /bin/bash -c "bin/magento s:up && bin/magento s:di:c && bin/magento ind:rei"
 }

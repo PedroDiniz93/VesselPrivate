@@ -14,6 +14,9 @@ Main() {
 
   read opt
   case $opt in
+    0|p)
+        clear && CommandsCompile && GoHome
+    ;;
 
     1|q)
       clear && verifyPackages && GoHome
