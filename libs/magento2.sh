@@ -65,7 +65,8 @@ MinervaStop() {
 
 MinervaSSH() {
   Notify "Acessando SSH"
-  sudo docker exec -it minerva-magento2_fpm_1 /bin/bash
+ CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
+  sudo docker exec -it "${CONTAINER}"_fpm_1 /bin/bash
 }
 
 Dump() {
@@ -127,6 +128,7 @@ importDump() {
   Notify "Importando Dump e configurando DB:" "$BLU"
   n98-magerun2.phar --version
   FILE="$MINERVA_PROJECT"/db.sql
+  CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
   if [ -f "$FILE" ]; then
     cd "${MINERVA_PROJECT}" && sed -i 's/DEFINER=[^*]*\*/\*/g' "$FILE"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar db:import "$FILE"
@@ -135,14 +137,14 @@ importDump() {
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/secure/base_url "$URL_LOCAL"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/unsecure/base_link_url "$URL_LOCAL"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/secure/base_link_url "$URL_LOCAL"
-    docker exec -it minerva-magento2_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_url ${URL_LOCAL}"
-    docker exec -it minerva-magento2_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/secure/base_url ${URL_LOCAL}"
-    docker exec -it minerva-magento2_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_link_url ${URL_LOCAL}"
-    docker exec -it minerva-magento2_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/secure/base_link_url ${URL_LOCAL}"
-    docker exec -it minerva-magento2_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base backoffice/api/key ${KEY_CUSTOMER_ORDER_MINERVA}"
-    docker exec -it minerva-magento2_fpm_1 /bin/bash -c "bin/magento cache:clean config"
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_url ${URL_LOCAL}"
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/secure/base_url ${URL_LOCAL}"
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_link_url ${URL_LOCAL}"
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/secure/base_link_url ${URL_LOCAL}"
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base backoffice/api/key ${KEY_CUSTOMER_ORDER_MINERVA}"
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento cache:clean config"
     Notify "Setando usuario ${BLU}admin${NC} e senha ${BLU}admin123${NC}"
-    docker exec -it minerva-magento2_fpm_1 /bin/bash -c "php bin/magento admin:user:create --admin-user=admin --admin-password=admin123 --admin-email=hi@mageplaza.com --admin-firstname=Mageplaza --admin-lastname=Family"
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "php bin/magento admin:user:create --admin-user=admin --admin-password=admin123 --admin-email=hi@mageplaza.com --admin-firstname=Mageplaza --admin-lastname=Family"
     Notify "Alterando senha do customer ${BLU}$CUSTOMER_EMAIL_CHANGE_PASSWORD${NC} para ${BLU}teste${NC}"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar customer:change-password "$CUSTOMER_EMAIL_CHANGE_PASSWORD" teste base
 
@@ -185,5 +187,6 @@ ConfigAch() {
 
 CommandsCompile() {
   Notify "Executando s:up, s:di:c e ind:rei"
-  docker exec -it minerva-magento2_fpm_1 /bin/bash -c "bin/magento s:up && bin/magento s:di:c && bin/magento ind:rei"
+  CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
+  docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento s:up && bin/magento s:di:c && bin/magento ind:rei"
 }
