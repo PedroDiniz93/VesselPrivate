@@ -35,7 +35,7 @@ return [
     'db' => [
         'connection' => [
             'default' => [
-                'host' => '172.24.0.3',
+                'host' => '172.24.0.99',
                 'username' => 'magento2',
                 'dbname' => 'magento2',
                 'password' => 'magento2',
@@ -48,7 +48,7 @@ return [
                 ]
             ],
             'indexer' => [
-                'host' => '172.24.0.3',
+                'host' => '172.24.0.99',
                 'username' => 'magento2',
                 'dbname' => 'magento2',
                 'password' => 'magento2',
@@ -66,7 +66,7 @@ return [
             'catalog' => [
                 'search' => [
                     'engine' => 'elasticsuite',
-                    'elasticsearch7_server_hostname' => '172.24.0.4',
+                    'elasticsearch7_server_hostname' => '172.24.0.98',
                     'elasticsearch7_server_port' => '9200'
                 ]
             ],
@@ -77,7 +77,7 @@ return [
             ],
             'smile_elasticsuite_core_base_settings' => [
                 'es_client' => [
-                    'servers' => '172.24.0.4:9200'
+                    'servers' => '172.24.0.98:9200'
                 ]
             ]
         ]

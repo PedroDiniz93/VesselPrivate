@@ -22,7 +22,7 @@ services:
       retries: 3
     networks:
       magento:
-        ipv4_address: 172.24.0.3
+        ipv4_address: 172.24.0.99
         aliases:
           - db.magento2.docker
   redis:
@@ -60,7 +60,7 @@ services:
       - bootstrap.memory_lock=true
     networks:
       magento:
-        ipv4_address: 172.24.0.4
+        ipv4_address: 172.24.0.98
         aliases:
           - elasticsearch.magento2.docker
   fpm:
