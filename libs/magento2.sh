@@ -65,7 +65,7 @@ MinervaStop() {
 
 MinervaSSH() {
   Notify "Acessando SSH"
- CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
+  CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
   sudo docker exec -it "${CONTAINER}"_fpm_1 /bin/bash
 }
 
@@ -190,3 +190,22 @@ CommandsCompile() {
   CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
   docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento s:up && bin/magento s:di:c && bin/magento ind:rei"
 }
+
+GruntInstall() {
+  Notify "Realizando instalação do grunt"
+  cd utils
+  cp themes.js "$MINERVA_PROJECT"/app/etc
+  cp package.json "$MINERVA_PROJECT"
+  cp Gruntfile.js "$MINERVA_PROJECT"
+  cp grunt-config.json "$MINERVA_PROJECT"
+  docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "npm install"
+}
+
+GruntExec() {
+  NotifyAsk "Digite o nome do tema"
+  read THEME_NAME
+  Notify "Compilando..."
+  docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "grunt exec:$THEME_NAME && grunt less:$THEME_NAME && grunt watch:$THEME_NAME"
+}
+
+

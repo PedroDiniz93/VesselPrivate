@@ -7,6 +7,7 @@ cd ${V_PATH}
 source ./libs/config.sh
 
 Main() {
+  CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
   cd ${V_PATH}
   CleanVars && clear && sleep 0.2 && ShowMenu
 
@@ -48,6 +49,14 @@ Main() {
 
     8|i)
         clear && ConfigAch && GoHome
+    ;;
+
+    9|o)
+        clear && GruntInstall && GoHome
+    ;;
+
+    10|qp)
+        clear && GruntExec && GoHome
     ;;
 
     99)
