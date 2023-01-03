@@ -15,5 +15,4 @@ source ${V_LIBS_PATH}/logo.sh
 source ${V_LIBS_PATH}/menu.sh
 source ${V_LIBS_PATH}/notify.sh
 source ${V_LIBS_PATH}/common.sh
-source ${V_LIBS_PATH}/magento1.sh
 source ${V_LIBS_PATH}/magento2.sh
