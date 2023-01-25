@@ -55,7 +55,7 @@ verifyPackages() {
 
 MinervaStart() {
   Notify "Inicializando containers do Magento 2 Minerva"
-  cd "$MINERVA_PROJECT" && apachectl stop && sudo service mysql stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
+  cd "$MINERVA_PROJECT" && sudo apachectl stop && sudo service mysql stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
 }
 
 MinervaStop() {
@@ -79,6 +79,9 @@ Dump() {
       magento-cloud db:dump -p s64qx6qcjx7ae -e "$ENVIRONMENT"
       Notify "Copiando para a raiz da loja"
       case "$ENVIRONMENT" in
+        production|production)
+          cp s64qx6qcjx7ae--production-5em2ouy--mysql--s64qx6qcjx7ae_stg--dump.sql "$MINERVA_PROJECT"/db.sql
+        ;;
         staging|STAGING)
           cp s64qx6qcjx7ae--staging-5em2ouy--mysql--s64qx6qcjx7ae_stg--dump.sql "$MINERVA_PROJECT"/db.sql
         ;;
@@ -137,6 +140,7 @@ importDump() {
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/secure/base_url "$URL_LOCAL"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/unsecure/base_link_url "$URL_LOCAL"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/secure/base_link_url "$URL_LOCAL"
+    cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set dev/grid/async_indexing 0
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_url ${URL_LOCAL}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/secure/base_url ${URL_LOCAL}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_link_url ${URL_LOCAL}"
