@@ -1,20 +1,18 @@
 #!/bin/bash
 
-VESSEL_LOCATION=~/$HOME/vessel
-VESSEL_REPO="git@gitlab.com:bis2bis/dev-tools/vessel.git"
-VESSEL_ALIAS="alias vessel='${VESSEL_LOCATION}/vessel.sh'"
+VESSEL_LOCATION=$HOME/Documentos/VesselPrivate
+VESSEL_REPO="git@github.com:PedroDiniz93/VesselPrivate.git"
+VESSEL_ALIAS="alias vessel='bash /home/pedrodiniz/Documentos/VesselPrivate/vessel.sh'"
 
 if [ ! -d "$VESSEL_LOCATION" ] ; then
 
   clear
-
   mkdir -p "$VESSEL_LOCATION"
-
   git clone --depth 1 --single-branch "$VESSEL_REPO" "$VESSEL_LOCATION"
 
   if [[ -f "~/.bashrc" ]]; then
     if [[ `grep "^$VESSEL_ALIAS$" ~/.bashrc | wc -l` == 0 ]]; then
-      echo  ${VESSEL_ALIAS} >> ~/.bashrc
+      sudo -S sh -c echo "${VESSEL_ALIAS} >> ~/.bashrc"
     fi
   fi
 
@@ -25,7 +23,6 @@ if [ ! -d "$VESSEL_LOCATION" ] ; then
   fi
 
   ${VESSEL_ALIAS}
-
   echo "Vessel instalado"
 
 else
@@ -43,17 +40,11 @@ else
   fi
 
   cd ${VESSEL_LOCATION} && git pull --rebase --progress
-
   echo "O Vessel foi atualizado"
 
 fi
 
 sleep 2
-
-chmod a+x ${VESSEL_LOCATION}/libs/*
-chmod a+x ${VESSEL_LOCATION}/magento1/autostart/*.sh
-
 echo "Reabra o terminal e o comando 'vessel' estará disponível"
-
 exit 0
 
