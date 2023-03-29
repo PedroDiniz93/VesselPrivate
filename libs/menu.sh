@@ -14,5 +14,6 @@ ShowMenu() {
     echo -e "          [8] Configurar env & docker-compose"
     echo -e "          [9] Instalar o grunt"
     echo -e "          [10] Executar o grunt"
+    echo -e "          [11] Alterar senha dos customers"
     echo -e " $B_RED         [99] Zerar todo o docker  $NC"
 }

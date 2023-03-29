@@ -147,7 +147,7 @@ importDump() {
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_link_url ${URL_LOCAL}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/secure/base_link_url ${URL_LOCAL}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base backoffice/api/key ${KEY_CUSTOMER_ORDER_MINERVA}"
-    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain """
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento cache:clean config"
     Notify "Setando usuario ${BLU}admin${NC} e senha ${BLU}admin123${NC}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "php bin/magento admin:user:create --admin-user=admin --admin-password=admin123 --admin-email=hi@mageplaza.com --admin-firstname=Mageplaza --admin-lastname=Family"
@@ -212,6 +212,22 @@ GruntExec() {
   read THEME_NAME
   Notify "Compilando..."
   docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "grunt exec:$THEME_NAME && grunt less:$THEME_NAME && grunt watch:$THEME_NAME"
+}
+
+ChangePasswordAllCustomers() {
+  Notify "Alterando todos as senhas dos customers para [teste]"
+  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.customer_entity SET password_hash = CONCAT(SHA2('xxxxxxxxteste', 256), ':xxxxxxxx:1') WHERE entity_id != 1;"
+  sleep 1
+  NotifySuccess "Alterado com sucesso"
+}
+
+SecretCommandsForTest() {
+  # Function used for cli tests
+
+  #test set config cookie domain
+  #docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
+  
+  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.customer_entity SET password_hash = CONCAT(SHA2('xxxxxxxxteste2', 256), ':xxxxxxxx:1') WHERE entity_id != 284332;"
 }
 
 

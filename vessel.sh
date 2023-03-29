@@ -59,8 +59,16 @@ Main() {
         clear && GruntExec && GoHome
     ;;
 
+    11|qq)
+        clear && ChangePasswordAllCustomers && GoHome
+    ;;
+
     99)
       clear && clearDocker && GoHome
+    ;;
+
+    ss|SS)
+      clear && SecretCommandsForTest && GoHome
     ;;
 
     Q|q|quit|exit)
