@@ -76,11 +76,11 @@ Dump() {
     y|Y)
       NotifyAsk "Qual ambiente deseja?"
       read -t "$WAIT_TIME" ENVIRONMENT
-      magento-cloud db:dump -p s64qx6qcjx7ae -e "$ENVIRONMENT"
       Notify "Copiando para a raiz da loja"
+      magento-cloud db:dump -p s64qx6qcjx7ae -e "$ENVIRONMENT" -r database
       case "$ENVIRONMENT" in
         production|production)
-          cp s64qx6qcjx7ae--production-5em2ouy--mysql--s64qx6qcjx7ae_stg--dump.sql "$MINERVA_PROJECT"/db.sql
+          cp s64qx6qcjx7ae--production-vohbr3y--mysql--s64qx6qcjx7ae--dump.sql "$MINERVA_PROJECT"/db.sql
         ;;
         staging|STAGING)
           cp s64qx6qcjx7ae--staging-5em2ouy--mysql--s64qx6qcjx7ae_stg--dump.sql "$MINERVA_PROJECT"/db.sql
@@ -129,6 +129,7 @@ clearDocker() {
 
 importDump() {
   Notify "Importando Dump e configurando DB:" "$BLU"
+  docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "chmod -R 777 var pub"
   n98-magerun2.phar --version
   FILE="$MINERVA_PROJECT"/db.sql
   CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
@@ -146,6 +147,7 @@ importDump() {
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_link_url ${URL_LOCAL}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/secure/base_link_url ${URL_LOCAL}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base backoffice/api/key ${KEY_CUSTOMER_ORDER_MINERVA}"
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain """
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento cache:clean config"
     Notify "Setando usuario ${BLU}admin${NC} e senha ${BLU}admin123${NC}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "php bin/magento admin:user:create --admin-user=admin --admin-password=admin123 --admin-email=hi@mageplaza.com --admin-firstname=Mageplaza --admin-lastname=Family"
