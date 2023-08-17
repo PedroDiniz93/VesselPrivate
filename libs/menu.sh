@@ -15,5 +15,6 @@ ShowMenu() {
     echo -e "          [9] Instalar o grunt"
     echo -e "          [10] Executar o grunt"
     echo -e "          [11] Alterar senha dos customers"
+    echo -e "          [12] Alterar todas as bases urls"
     echo -e " $B_RED         [99] Zerar todo o docker  $NC"
 }

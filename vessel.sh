@@ -63,6 +63,10 @@ Main() {
         clear && ChangePasswordAllCustomers && GoHome
     ;;
 
+    12|qw)
+        clear && ChangeBaseUrl && GoHome
+    ;;
+
     99)
       clear && clearDocker && GoHome
     ;;

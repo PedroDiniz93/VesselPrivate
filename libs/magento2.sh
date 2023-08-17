@@ -137,15 +137,8 @@ importDump() {
     cd "${MINERVA_PROJECT}" && sed -i 's/DEFINER=[^*]*\*/\*/g' "$FILE"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar db:import "$FILE"
     CommandsCompile
-    cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/unsecure/base_url "$URL_LOCAL"
-    cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/secure/base_url "$URL_LOCAL"
-    cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/unsecure/base_link_url "$URL_LOCAL"
-    cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set web/secure/base_link_url "$URL_LOCAL"
-    cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set dev/grid/async_indexing 0
-    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_url ${URL_LOCAL}"
-    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/secure/base_url ${URL_LOCAL}"
-    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/unsecure/base_link_url ${URL_LOCAL}"
-    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base web/secure/base_link_url ${URL_LOCAL}"
+    ChangeUrl
+    cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set dev/grid/async_indexing 0    
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base backoffice/api/key ${KEY_CUSTOMER_ORDER_MINERVA}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento cache:clean config"
@@ -221,13 +214,27 @@ ChangePasswordAllCustomers() {
   NotifySuccess "Alterado com sucesso"
 }
 
+ChangeBaseUrl() {
+  NotifyAsk "Digite a url"
+  read URL
+  Notify "Alterando todos as base urls para https://${URL}/"
+  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = 'https://${URL}/' WHERE path LIKE '%base_url%';"
+  sleep 1
+  NotifySuccess "Alterado com sucesso"
+}
+
+ChangeUrl() {
+  Notify "Alterando todos as base urls para ${URL_LOCAL}"
+  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = '${URL_LOCAL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
+}
+
 SecretCommandsForTest() {
   # Function used for cli tests
 
   #test set config cookie domain
   #docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
-  
-  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.customer_entity SET password_hash = CONCAT(SHA2('xxxxxxxxteste2', 256), ':xxxxxxxx:1') WHERE entity_id != 284332;"
+  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = '${URL_LOCAL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
+  # docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.customer_entity SET password_hash = CONCAT(SHA2('xxxxxxxxteste2', 256), ':xxxxxxxx:1') WHERE entity_id != 284332;"
 }
 
 
