@@ -136,11 +136,14 @@ importDump() {
   if [ -f "$FILE" ]; then
     cd "${MINERVA_PROJECT}" && sed -i 's/DEFINER=[^*]*\*/\*/g' "$FILE"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar db:import "$FILE"
+    DisableModulesUnnecessaryForLocal
     CommandsCompile
     ChangeUrl
+    Notify "Setando configs padrões para o ambiente minerva"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set dev/grid/async_indexing 0    
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base backoffice/api/key ${KEY_CUSTOMER_ORDER_MINERVA}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set web/url/use_store 1"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento cache:clean config"
     Notify "Setando usuario ${BLU}admin${NC} e senha ${BLU}admin123${NC}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "php bin/magento admin:user:create --admin-user=admin --admin-password=admin123 --admin-email=hi@mageplaza.com --admin-firstname=Mageplaza --admin-lastname=Family"
@@ -148,7 +151,7 @@ importDump() {
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar customer:change-password "$CUSTOMER_EMAIL_CHANGE_PASSWORD" teste base
 
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar sys:store:config:base-url:list
-    NotifySuccess "Realizado o Dump com succeso acesse ${URL_LOCAL}"
+    NotifySuccess "Realizado o Dump com sucesso acesse ${URL_LOCAL}"
   else
       echo -e "$B_RED Arquivo db.sql não exite na raiz da loja. $NC"
   fi
@@ -218,7 +221,7 @@ ChangeBaseUrl() {
   NotifyAsk "Digite a url"
   read URL
   Notify "Alterando todos as base urls para https://${URL}/"
-  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = 'https://${URL}/' WHERE path LIKE '%base_url%';"
+  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = '${URL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
   sleep 1
   NotifySuccess "Alterado com sucesso"
 }
@@ -228,12 +231,20 @@ ChangeUrl() {
   docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = '${URL_LOCAL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
 }
 
+DisableModulesUnnecessaryForLocal() {
+  Notify "Desabilitando módulos Auth para não impactar na local"
+  docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento module:disable Magento_TwoFactorAuth"
+  docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento module:disable Minerva_CustomTwoFactorAuth"
+}
+
 SecretCommandsForTest() {
   # Function used for cli tests
+  DisableModulesUnnecessaryForLocal
 
-  #test set config cookie domain
-  #docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
-  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = '${URL_LOCAL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
+  # test set config cookie domain
+  # docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set web/url/use_store 1"
+  # docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
+  # docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = '${URL_LOCAL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
   # docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.customer_entity SET password_hash = CONCAT(SHA2('xxxxxxxxteste2', 256), ':xxxxxxxx:1') WHERE entity_id != 284332;"
 }
 

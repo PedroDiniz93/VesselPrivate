@@ -67,6 +67,10 @@ Main() {
         clear && ChangeBaseUrl && GoHome
     ;;
 
+    13|qr)
+        clear && DisableModulesUnnecessaryForLocal && GoHome
+    ;;
+
     99)
       clear && clearDocker && GoHome
     ;;
