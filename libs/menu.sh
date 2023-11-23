@@ -1,7 +1,7 @@
 #!/bin/bash
 ShowMenu() {
     echo -e "$LOGO"
-    echo -e "     $B_BLUE               $CONTAINER              $NC"
+    echo -e "     $B_BLUE                      $PROJECT_TITLE PROJECT -> $CONTAINER $NC$B_BLUE               $NC"
     echo ""
     echo -e "          [0] Executar comandos de compilação"
     echo -e "          [1] Verificar pacotes necessários"
@@ -19,4 +19,5 @@ ShowMenu() {
     echo -e "          [13] Desabilitar módulos auth admin"
     echo -e "          [14] Change Project"
     echo -e " $B_RED         [99] Zerar todo o docker  $NC"
+    echo -e "     $B_BLUE                      $PROJECT_TITLE PROJECT -> $CONTAINER $NC$B_BLUE               $NC"
 }

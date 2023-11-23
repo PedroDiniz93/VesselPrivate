@@ -273,15 +273,4 @@ ActionChangeProject() {
 }
 
 
-SecretCommandsForTest() {
-  # Function used for cli tests
-  # DisableModulesUnnecessaryForLocal
- 
-  # test set config cookie domain
-  # docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set web/url/use_store 1"
-  # docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
-  # docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = '${URL_LOCAL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
-  # docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.customer_entity SET password_hash = CONCAT(SHA2('xxxxxxxxteste2', 256), ':xxxxxxxx:1') WHERE entity_id != 284332;"
-}
-
 
