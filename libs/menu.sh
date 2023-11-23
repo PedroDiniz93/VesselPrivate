@@ -1,15 +1,15 @@
 #!/bin/bash
 ShowMenu() {
     echo -e "$LOGO"
-    echo -e "     $B_BLUE               Magento 2               $NC"
+    echo -e "     $B_BLUE               $CONTAINER              $NC"
     echo ""
     echo -e "          [0] Executar comandos de compilação"
     echo -e "          [1] Verificar pacotes necessários"
-    echo -e "          [2] Inicializar containers Minerva"
-    echo -e "          [3] Pausar containers Minerva"
-    echo -e "          [4] Realizar Dump Minerva"
+    echo -e "          [2] Inicializar containers $CONTAINER"
+    echo -e "          [3] Pausar containers $CONTAINER"
+    echo -e "          [4] Realizar Dump $CONTAINER"
     echo -e "          [5] Acessar container via ssh"
-    echo -e " $YELLOW         [6] Instalar do zero loja minerva (Em Dev) $NC"
+    echo -e " $YELLOW         [6] Instalar do zero loja $CONTAINER (Em Dev) $NC"
     echo -e "          [7] Adicionar loja /etc/hosts"
     echo -e "          [8] Configurar env & docker-compose"
     echo -e "          [9] Instalar o grunt"
@@ -17,5 +17,6 @@ ShowMenu() {
     echo -e "          [11] Alterar senha dos customers"
     echo -e "          [12] Alterar todas as bases urls"
     echo -e "          [13] Desabilitar módulos auth admin"
+    echo -e "          [14] Change Project"
     echo -e " $B_RED         [99] Zerar todo o docker  $NC"
 }

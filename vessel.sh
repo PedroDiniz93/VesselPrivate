@@ -7,7 +7,12 @@ cd ${V_PATH}
 source ./libs/config.sh
 
 Main() {
-  CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
+  CONTAINER=$(echo $PROJECT | cut -d "/" -f5)
+  if [ "$CONTAINER" == "oaz" ]; then
+    DATABASE=oaz
+  else
+    DATABASE=magento2
+  fi
   cd ${V_PATH}
   CleanVars && clear && sleep 0.2 && ShowMenu
 
@@ -69,6 +74,10 @@ Main() {
 
     13|qr)
         clear && DisableModulesUnnecessaryForLocal && GoHome
+    ;;
+
+    14|qr)
+        clear && ChangeProject && ExecAgain
     ;;
 
     99)

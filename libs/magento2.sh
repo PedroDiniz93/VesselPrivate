@@ -54,18 +54,18 @@ verifyPackages() {
 }
 
 MinervaStart() {
-  Notify "Inicializando containers do Magento 2 Minerva"
-  cd "$MINERVA_PROJECT" && sudo apachectl stop && sudo service mysql stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
+  Notify "Inicializando containers do Magento 2 $CONTAINER"
+  cd "$PROJECT" && sudo apachectl stop && sudo service mysql stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
 }
 
 MinervaStop() {
-  Notify "Parando containers do Magento 2 Minerva"
-  cd "$MINERVA_PROJECT" && docker-compose stop
+  Notify "Parando containers do Magento 2 $CONTAINER"
+  cd "$PROJECT" && docker-compose stop
 }
 
 MinervaSSH() {
-  Notify "Acessando SSH"
-  CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
+  Notify "Acessando SSH $CONTAINER"
+  CONTAINER=$(echo $PROJECT | cut -d "/" -f5)
   sudo docker exec -it "${CONTAINER}"_fpm_1 /bin/bash
 }
 
@@ -80,22 +80,22 @@ Dump() {
       magento-cloud db:dump -p s64qx6qcjx7ae -e "$ENVIRONMENT" -r database
       case "$ENVIRONMENT" in
         production|production)
-          cp s64qx6qcjx7ae--production-vohbr3y--mysql--s64qx6qcjx7ae--dump.sql "$MINERVA_PROJECT"/db.sql
+          cp s64qx6qcjx7ae--production-vohbr3y--mysql--s64qx6qcjx7ae--dump.sql "$PROJECT"/db.sql
         ;;
         staging|STAGING)
-          cp s64qx6qcjx7ae--staging-5em2ouy--mysql--s64qx6qcjx7ae_stg--dump.sql "$MINERVA_PROJECT"/db.sql
+          cp s64qx6qcjx7ae--staging-5em2ouy--mysql--s64qx6qcjx7ae_stg--dump.sql "$PROJECT"/db.sql
         ;;
         staging2|STAGING2)
-          cp s64qx6qcjx7ae--staging2-5zxmgzy--mysql--s64qx6qcjx7ae_stg2--dump.sql "$MINERVA_PROJECT"/db.sql
+          cp s64qx6qcjx7ae--staging2-5zxmgzy--mysql--s64qx6qcjx7ae_stg2--dump.sql "$PROJECT"/db.sql
         ;;
       esac
       sleep 5
       importDump
     ;;
     n|N)
-      FILE="$MINERVA_PROJECT"/db.sql
+      FILE="$PROJECT"/db.sql
       if [ -f "$FILE" ]; then
-        NotifySuccess "O ultimo que dump foi gerado: $(date -r "$MINERVA_PROJECT"/db.sql '+%m-%d-%Y %H:%M:%S')"
+        NotifySuccess "O ultimo que dump foi gerado: $(date -r "$PROJECT"/db.sql '+%m-%d-%Y %H:%M:%S')"
         NotifyAsk "Deseja importar esse dump? y/n:"
         read -t "$WAIT_TIME" YoN
         case "$YoN" in
@@ -131,15 +131,15 @@ importDump() {
   Notify "Importando Dump e configurando DB:" "$BLU"
   docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "chmod -R 777 var pub"
   n98-magerun2.phar --version
-  FILE="$MINERVA_PROJECT"/db.sql
-  CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
+  FILE="$PROJECT"/db.sql
+  CONTAINER=$(echo $PROJECT | cut -d "/" -f5)
   if [ -f "$FILE" ]; then
     cd "${MINERVA_PROJECT}" && sed -i 's/DEFINER=[^*]*\*/\*/g' "$FILE"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar db:import "$FILE"
     DisableModulesUnnecessaryForLocal
     CommandsCompile
     ChangeUrl
-    Notify "Setando configs padrões para o ambiente minerva"
+    Notify "Setando configs padrões para o ambiente $CONTAINER"
     cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set dev/grid/async_indexing 0    
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base backoffice/api/key ${KEY_CUSTOMER_ORDER_MINERVA}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
@@ -181,25 +181,31 @@ AddHost() {
 ConfigAch() {
   Notify "Configurando docker-compose.yml & env.php"
   cd utils
-  cp docker-compose.yml "$MINERVA_PROJECT"/docker-compose.yml
-  sleep 1
-  cp env.php "$MINERVA_PROJECT"/app/etc/env.php
+  if [ "$CONTAINER" == "oaz" ]; then
+    cp oaz/docker-compose.yml "$PROJECT"/docker-compose.yml
+    sleep 1
+    cp oaz/env.php "$PROJECT"/app/etc/env.php
+  else
+    cp minerva/docker-compose.yml "$PROJECT"/docker-compose.yml
+    sleep 1
+    cp minerva/env.php "$PROJECT"/app/etc/env.php
+  fi
   NotifySuccess "Configurado!"
 }
 
 CommandsCompile() {
   Notify "Executando s:up, s:di:c e ind:rei"
-  CONTAINER=$(echo $MINERVA_PROJECT | cut -d "/" -f5)
+  CONTAINER=$(echo $PROJECT | cut -d "/" -f5)
   docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento s:up && bin/magento s:di:c && bin/magento ind:rei"
 }
 
 GruntInstall() {
   Notify "Realizando instalação do grunt"
   cd utils
-  cp themes.js "$MINERVA_PROJECT"/app/etc
-  cp package.json "$MINERVA_PROJECT"
-  cp Gruntfile.js "$MINERVA_PROJECT"
-  cp grunt-config.json "$MINERVA_PROJECT"
+  cp themes.js "$PROJECT"/app/etc
+  cp package.json "$PROJECT"
+  cp Gruntfile.js "$PROJECT"
+  cp grunt-config.json "$PROJECT"
   docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "npm install"
 }
 
@@ -212,7 +218,7 @@ GruntExec() {
 
 ChangePasswordAllCustomers() {
   Notify "Alterando todos as senhas dos customers para [teste]"
-  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.customer_entity SET password_hash = CONCAT(SHA2('xxxxxxxxteste', 256), ':xxxxxxxx:1') WHERE entity_id != 1;"
+  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE $DATABASE.customer_entity SET password_hash = CONCAT(SHA2('xxxxxxxxteste', 256), ':xxxxxxxx:1') WHERE entity_id != 1;"
   sleep 1
   NotifySuccess "Alterado com sucesso"
 }
@@ -221,14 +227,14 @@ ChangeBaseUrl() {
   NotifyAsk "Digite a url"
   read URL
   Notify "Alterando todos as base urls para https://${URL}/"
-  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = '${URL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
+  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE $DATABASE.core_config_data SET value = '${URL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
   sleep 1
   NotifySuccess "Alterado com sucesso"
 }
 
 ChangeUrl() {
   Notify "Alterando todos as base urls para ${URL_LOCAL}"
-  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE magento2.core_config_data SET value = '${URL_LOCAL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
+  docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE $DATABASE.core_config_data SET value = '${URL_LOCAL}' WHERE path  LIKE '%secure/base_%' AND path NOT LIKE 'web/secure/base_static_url' AND path NOT LIKE 'web/secure/base_media_url' AND path NOT LIKE 'web/unsecure/base_media_url' AND path NOT LIKE 'web/unsecure/base_static_url';"
 }
 
 DisableModulesUnnecessaryForLocal() {
@@ -237,10 +243,40 @@ DisableModulesUnnecessaryForLocal() {
   docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento module:disable Minerva_CustomTwoFactorAuth"
 }
 
+ChangeProject() {
+  NotifyAsk "Selecione o projeto:"
+  echo -e "          [1] Minerva"
+  echo -e "          [2] OAZ"
+  read P_NAME
+  case $P_NAME in
+    1)
+        ActionChangeProject "minerva-magento2"
+    ;;
+    2)
+      ActionChangeProject "oaz"
+    ;;
+  esac
+}
+
+ActionChangeProject() {
+  Notify "Alterando o escopo do projeto... $1"
+  local OLD_LINE_PATTERN=PROJECT
+  local NEW_LINE="PROJECT=/home/pedrodiniz/Documentos/$1"
+  local FILE=/home/pedrodiniz/Documentos/VesselPrivate/.env
+  local NEW=$(echo "${NEW_LINE}" | sed 's/\//\\\//g')
+  touch "${FILE}"
+  sed -i '/'"${OLD_LINE_PATTERN}"'/{s/.*/'"${NEW}"'/;h};${x;/./{x;q100};x}' "${FILE}"
+  if [[ $? -ne 100 ]] && [[ ${NEW_LINE} != '' ]]
+  then
+    echo "${NEW_LINE}" >> "${FILE}"
+  fi
+}
+
+
 SecretCommandsForTest() {
   # Function used for cli tests
-  DisableModulesUnnecessaryForLocal
-
+  # DisableModulesUnnecessaryForLocal
+ 
   # test set config cookie domain
   # docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set web/url/use_store 1"
   # docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'

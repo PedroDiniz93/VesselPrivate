@@ -11,3 +11,7 @@ GoHome() {
   read -p "$*"
   Main
 }
+
+ExecAgain() {
+  bash /home/pedrodiniz/Documentos/VesselPrivate/vessel.sh
+}
