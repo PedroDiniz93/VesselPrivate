@@ -80,6 +80,10 @@ Main() {
         clear && ChangeProject && ExecAgain
     ;;
 
+    15|qt)
+        clear && RunCron && ExecAgain
+    ;;
+
     99)
       clear && clearDocker && GoHome
     ;;

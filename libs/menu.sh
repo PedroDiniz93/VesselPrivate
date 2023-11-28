@@ -18,6 +18,7 @@ ShowMenu() {
     echo -e "          [12] Alterar todas as bases urls"
     echo -e "          [13] Desabilitar módulos auth admin"
     echo -e "          [14] Change Project"
+    echo -e "          [15] Executar cron"
     echo -e " $B_RED         [99] Zerar todo o docker  $NC"
     echo -e "     $B_BLUE                      $PROJECT_TITLE PROJECT -> $CONTAINER $NC$B_BLUE               $NC"
 }

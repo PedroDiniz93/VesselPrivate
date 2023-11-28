@@ -134,13 +134,13 @@ importDump() {
   FILE="$PROJECT"/db.sql
   CONTAINER=$(echo $PROJECT | cut -d "/" -f5)
   if [ -f "$FILE" ]; then
-    cd "${MINERVA_PROJECT}" && sed -i 's/DEFINER=[^*]*\*/\*/g' "$FILE"
-    cd "${MINERVA_PROJECT}" && n98-magerun2.phar db:import "$FILE"
+    cd "${PROJECT}" && sed -i 's/DEFINER=[^*]*\*/\*/g' "$FILE"
+    cd "${PROJECT}" && n98-magerun2.phar db:import "$FILE"
     DisableModulesUnnecessaryForLocal
     CommandsCompile
     ChangeUrl
     Notify "Setando configs padrões para o ambiente $CONTAINER"
-    cd "${MINERVA_PROJECT}" && n98-magerun2.phar config:store:set dev/grid/async_indexing 0    
+    cd "${PROJECT}" && n98-magerun2.phar config:store:set dev/grid/async_indexing 0    
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base backoffice/api/key ${KEY_CUSTOMER_ORDER_MINERVA}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set web/url/use_store 1"
@@ -148,9 +148,9 @@ importDump() {
     Notify "Setando usuario ${BLU}admin${NC} e senha ${BLU}admin123${NC}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "php bin/magento admin:user:create --admin-user=admin --admin-password=admin123 --admin-email=hi@mageplaza.com --admin-firstname=Mageplaza --admin-lastname=Family"
     Notify "Alterando senha do customer ${BLU}$CUSTOMER_EMAIL_CHANGE_PASSWORD${NC} para ${BLU}teste${NC}"
-    cd "${MINERVA_PROJECT}" && n98-magerun2.phar customer:change-password "$CUSTOMER_EMAIL_CHANGE_PASSWORD" teste base
+    cd "${PROJECT}" && n98-magerun2.phar customer:change-password "$CUSTOMER_EMAIL_CHANGE_PASSWORD" teste base
 
-    cd "${MINERVA_PROJECT}" && n98-magerun2.phar sys:store:config:base-url:list
+    cd "${PROJECT}" && n98-magerun2.phar sys:store:config:base-url:list
     NotifySuccess "Realizado o Dump com sucesso acesse ${URL_LOCAL}"
   else
       echo -e "$B_RED Arquivo db.sql não exite na raiz da loja. $NC"
@@ -271,6 +271,13 @@ ActionChangeProject() {
     echo "${NEW_LINE}" >> "${FILE}"
   fi
 }
+
+RunCron() {
+  NotifyAsk "Digite o nome da cron para executar"
+  read C_NAME
+  cd "${PROJECT}" && sudo n98-magerun2.phar sys:cron:run "$C_NAME"
+}
+
 
 
 
