@@ -13,5 +13,5 @@ GoHome() {
 }
 
 ExecAgain() {
-  bash /home/pedrodiniz/Documentos/VesselPrivate/vessel.sh
+  bash $HOME/Documentos/VesselPrivate/vessel.sh
 }

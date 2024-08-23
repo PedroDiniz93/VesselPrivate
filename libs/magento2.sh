@@ -334,6 +334,66 @@ CloneProjects () {
     fi
 }
 
+CleanTablesLogsMagento() {
+    log_tables=(
+        "adminnotification_inbox"
+        "customer_log"
+        "customer_visitor"
+        "elasticsuite_tracker_log_customer_link"
+        "magento_bulk"
+        "magento_logging_event"
+        "magento_logging_event_changes"
+        "mageplaza_smtp_log"
+        "minerva_checkout_error_logs"
+        "queue_message"
+        "report_event"
+        "webapi_logs"
+    )
+
+    Notify "Limpando tabelas de logs do Magento..."
+
+    for table in "${log_tables[@]}"; do
+        echo -e "Limpando tabela: $table"
+        docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "DELETE FROM $DATABASE.$table;"
+        if [ $? -eq 0 ]; then
+            echo -e "${B_GRE}Tabela $table limpa com sucesso.${NC}\n"
+        else
+            echo -e  "${B_RED} Erro ao limpar a tabela $table.${NC}\n"
+        fi
+    done
+    NotifySuccess "Processo de limpeza concluído.\n"
+}
+
+Backup() {
+    BACKUP_DIR="backup"
+    mkdir -p "$BACKUP_DIR"
+    TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+    DB_BACKUP_FILE="$BACKUP_DIR/${DATABASE}_backup_$TIMESTAMP.sql.gz"
+    FILES_BACKUP_FILE="$BACKUP_DIR/project_backup_$TIMESTAMP.tar.gz"
+
+    echo -e "\nIniciando backup do banco de dados...\n"
+
+    docker exec ${CONTAINER}_db_1 /usr/bin/mysqldump -u root -p"magento2" "$DATABASE" | pv | gzip > "$DB_BACKUP_FILE"
+    if [ $? -eq 0 ]; then
+        NotifyInfo "Backup do banco de dados concluído com sucesso: $DB_BACKUP_FILE\n"
+    else
+        NotifyError "${B_RED}Erro ao realizar o backup do banco de dados.${NC}\n"
+        return 1
+    fi
+
+    echo -e "\nIniciando backup dos arquivos do projeto...\n"
+
+    tar -cf - -C "$PROJECT" . | pv | gzip > "$FILES_BACKUP_FILE"
+    if [ $? -eq 0 ]; then
+        NotifyInfo "Backup dos arquivos do projeto concluído com sucesso: $FILES_BACKUP_FILE\n"
+    else
+        NotifyError "${B_RED}Erro ao realizar o backup dos arquivos do projeto.${NC}\n"
+        return 1
+    fi
+
+    NotifySuccess "${B_GRE}Processo de backup concluído com sucesso.${NC}\n"
+}
+
 
 
 

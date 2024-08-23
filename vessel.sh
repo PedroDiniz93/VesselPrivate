@@ -95,6 +95,14 @@ Main() {
         clear && RunCron && ExecAgain
     ;;
 
+    16|qy)
+        clear && CleanTablesLogsMagento && GoHome
+    ;;
+
+    17|qu)
+        clear && Backup && GoHome
+    ;;
+
     99)
       clear && clearDocker && GoHome
     ;;
