@@ -30,6 +30,14 @@ VerifyGit() {
   which "git" | grep -o "git" > /dev/null &&  return 0 || return 1
 }
 
+VerifyPV() {
+  if command -v pv > /dev/null 2>&1; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 verifyPackages() {
   if VerifyPHP "$1" == 0 ; then echo -e "$B_GRE $PHP_VERSION Installed $NC"; else echo -e "$B_RED $PHP_VERSION Not Installed $NC"; fi
   if VerifyPHPExtension "bcmath" "$1" == 0 ; then echo -e "$B_GRE $PHP_VERSION-bcmath Installed $NC"; else echo -e "$B_RED $PHP_VERSION-bcmath Not Installed $NC"; fi
@@ -51,11 +59,12 @@ verifyPackages() {
   if VerifyDockerCompose "$1" == 0 ; then echo -e "$B_GRE Docker Compose Installed $NC"; else echo -e "$B_RED Docker Compose Not Installed, execute commands to install: $NC"; echo -e " sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose"; echo -e " sudo chmod +x /usr/local/bin/docker-compose"; echo -e " docker-compose --version";  fi
   if VerifyN98MageRun "$1" == 0 ; then echo -e "$B_GRE n98-magerun2 Installed $NC"; else echo -e "$B_RED n98-magerun2 Not Installed, execute commands to install: $NC"; echo -e " wget https://files.magerun.net/n98-magerun2.phar"; echo -e " chmod +x ./n98-magerun2.phar"; echo -e " sudo cp ./n98-magerun2.phar /usr/local/bin/"; echo -e " n98-magerun2.phar –version"; fi
   if VerifyGit "$1" == 1 ; then echo -e "$B_GRE Git Installed $NC"; else echo -e "$B_RED Git Not Installed, execute command: sudo apt install git $NC"; fi
+  if VerifyPV "$1" == 0 ; then echo -e "$B_GRE pv Installed $NC"; else echo -e "$B_RED pv Not Installed, execute command: sudo apt install pv $NC"; fi
 }
 
 MinervaStart() {
   Notify "Inicializando containers do Magento 2 $CONTAINER"
-  cd "$PROJECT" && sudo apachectl stop && sudo service mysql stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
+  cd "$PROJECT" && sudo apachectl stop && sudo sysctl -w vm.max_map_count=262144 && sudo docker-compose up -d --remove-orphans
 }
 
 MinervaStop() {
@@ -80,13 +89,13 @@ Dump() {
       magento-cloud db:dump -p s64qx6qcjx7ae -e "$ENVIRONMENT" -r database
       case "$ENVIRONMENT" in
         production|production)
-          cp s64qx6qcjx7ae--production-vohbr3y--mysql--s64qx6qcjx7ae--dump.sql "$PROJECT"/db.sql
+          cp s64qx6qcjx7ae--production-vohbr3y--s64qx6qcjx7ae--dump.sql "$PROJECT"/db.sql
         ;;
         staging|STAGING)
-          cp s64qx6qcjx7ae--staging-5em2ouy--mysql--s64qx6qcjx7ae_stg--dump.sql "$PROJECT"/db.sql
+          cp s64qx6qcjx7ae--staging-5em2ouy--s64qx6qcjx7ae_stg--dump.sql "$PROJECT"/db.sql
         ;;
         staging2|STAGING2)
-          cp s64qx6qcjx7ae--staging2-5zxmgzy--mysql--s64qx6qcjx7ae_stg2--dump.sql "$PROJECT"/db.sql
+          cp s64qx6qcjx7ae--staging2-5zxmgzy--s64qx6qcjx7ae_stg2--dump.sql "$PROJECT"/db.sql
         ;;
       esac
       sleep 5
@@ -130,32 +139,40 @@ clearDocker() {
 importDump() {
   Notify "Importando Dump e configurando DB:" "$BLU"
   docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "chmod -R 777 var pub"
-  n98-magerun2.phar --version
   FILE="$PROJECT"/db.sql
   CONTAINER=$(echo $PROJECT | cut -d "/" -f5)
   if [ -f "$FILE" ]; then
+    # Importa o dump SQL diretamente no container do banco de dados
     cd "${PROJECT}" && sed -i 's/DEFINER=[^*]*\*/\*/g' "$FILE"
-    cd "${PROJECT}" && n98-magerun2.phar db:import "$FILE"
-    DisableModulesUnnecessaryForLocal
+    cat "$FILE" | pv | docker exec -i minerva-magento2_db_1 /bin/bash -c "mysql -u root -pmagento2 magento2"
+
+    # Executa comandos adicionais para configurar o ambiente Magento
     CommandsCompile
     ChangeUrl
+    DisableModulesUnnecessaryForLocal
     Notify "Setando configs padrões para o ambiente $CONTAINER"
-    cd "${PROJECT}" && n98-magerun2.phar config:store:set dev/grid/async_indexing 0    
+
+    # Executa comandos no container para setar configs
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set --scope=websites --scope-code=base backoffice/api/key ${KEY_CUSTOMER_ORDER_MINERVA}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c 'bin/magento config:set --scope=stores --scope-code=default web/cookie/cookie_domain ""'
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set web/url/use_store 1"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento cache:clean config"
+    docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "bin/magento config:set web/url/use_store 0"
+
+    # Cria um usuário admin no Magento
     Notify "Setando usuario ${BLU}admin${NC} e senha ${BLU}admin123${NC}"
     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "php bin/magento admin:user:create --admin-user=admin --admin-password=admin123 --admin-email=hi@mageplaza.com --admin-firstname=Mageplaza --admin-lastname=Family"
-    Notify "Alterando senha do customer ${BLU}$CUSTOMER_EMAIL_CHANGE_PASSWORD${NC} para ${BLU}teste${NC}"
-    cd "${PROJECT}" && n98-magerun2.phar customer:change-password "$CUSTOMER_EMAIL_CHANGE_PASSWORD" teste base
 
+    # Altera a senha de um customer específico
+    Notify "Alterando senha do customer ${BLU}$CUSTOMER_EMAIL_CHANGE_PASSWORD${NC} para ${BLU}teste${NC}"
+    docker exec -i "${CONTAINER}"_db_1 mysql -u root -pmagento2 -e "UPDATE $DATABASE.customer_entity SET password_hash = CONCAT(SHA2('xxxxxxxxteste', 256), ':xxxxxxxx:1') WHERE email = '$CUSTOMER_EMAIL_CHANGE_PASSWORD'";
+
+    # Lista as URLs base das lojas
     cd "${PROJECT}" && n98-magerun2.phar sys:store:config:base-url:list
     NotifySuccess "Realizado o Dump com sucesso acesse ${URL_LOCAL}"
   else
       echo -e "$B_RED Arquivo db.sql não exite na raiz da loja. $NC"
   fi
-
 }
 
 ReadHost() {
@@ -261,8 +278,8 @@ ChangeProject() {
 ActionChangeProject() {
   Notify "Alterando o escopo do projeto... $1"
   local OLD_LINE_PATTERN=PROJECT
-  local NEW_LINE="PROJECT=/home/pedrodiniz/Documentos/$1"
-  local FILE=/home/pedrodiniz/Documentos/VesselPrivate/.env
+  local NEW_LINE="PROJECT=$HOME/Documentos/$1"
+  local FILE=$HOME/Documentos/VesselPrivate/.env
   local NEW=$(echo "${NEW_LINE}" | sed 's/\//\\\//g')
   touch "${FILE}"
   sed -i '/'"${OLD_LINE_PATTERN}"'/{s/.*/'"${NEW}"'/;h};${x;/./{x;q100};x}' "${FILE}"
@@ -276,6 +293,45 @@ RunCron() {
   NotifyAsk "Digite o nome da cron para executar"
   read C_NAME
   cd "${PROJECT}" && sudo n98-magerun2.phar sys:cron:run "$C_NAME"
+}
+
+CloneProjects () {
+    Notify "Buscando projetos do Workspace: $B_BLUE $WORKSPACE_BITBUCKET"
+    API_URL="https://api.bitbucket.org/2.0/repositories/$WORKSPACE_BITBUCKET"
+    DEST_DIR="$HOME/Documentos"
+
+    SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+    JQ_PATH="$SCRIPT_DIR/utils/jq"
+
+    repo_list=$(curl -u "$USER_BITBUCKET:$PASSWORD_BITBUCKET" -s "$API_URL" | "$JQ_PATH" -r '.values[] | .name + " " + .links.clone[1].href')
+    if [ $? -ne 0 ]; then
+        echo "Erro ao processar a resposta JSON. Verifique se o Workspace esta configurado corretamente."
+        exit 1
+    fi
+
+    IFS=$'\n' read -rd '' -a repos <<<"$repo_list"
+    echo "Selecione um projeto para clonar:"
+    for i in "${!repos[@]}"; do
+        echo "[$((i+1))] ${repos[$i]}"
+    done
+
+    read selection
+
+    if [[ "$selection" -ge 1 && "$selection" -le "${#repos[@]}" ]]; then
+        repo_info="${repos[$((selection-1))]}"
+        repo_name=$(echo "$repo_info" | awk '{print $1}')
+        repo_url=$(echo "$repo_info" | awk '{print $NF}')
+
+        if [ -d "$DEST_DIR/$repo_name" ]; then
+            echo "O repositório '$repo_name' já existe em '$DEST_DIR'."
+        else
+            git clone "$repo_url" "$DEST_DIR/$repo_name"
+            echo "Repositório '$repo_name' clonado com sucesso em '$DEST_DIR'."
+        fi
+    else
+        echo "Seleção inválida. Saindo..."
+        exit 1
+    fi
 }
 
 

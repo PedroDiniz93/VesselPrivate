@@ -9,7 +9,7 @@ ShowMenu() {
     echo -e "          [3] Pausar containers $CONTAINER"
     echo -e "          [4] Realizar Dump $CONTAINER"
     echo -e "          [5] Acessar container via ssh"
-    echo -e " $YELLOW         [6] Instalar do zero loja $CONTAINER (Em Dev) $NC"
+    echo -e "          [6] Clonar Projeto"
     echo -e "          [7] Adicionar loja /etc/hosts"
     echo -e "          [8] Configurar env & docker-compose"
     echo -e "          [9] Instalar o grunt"

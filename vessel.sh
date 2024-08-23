@@ -6,12 +6,23 @@ cd ${V_PATH}
 
 source ./libs/config.sh
 
+# Function to handle errors
+handle_error() {
+  echo "Error on line $1"
+  exit 1
+}
+
+# Trap errors
+trap 'handle_error $LINENO' ERR
+
 Main() {
   CONTAINER=$(echo $PROJECT | cut -d "/" -f5)
   if [ "$CONTAINER" == "oaz" ]; then
     DATABASE=oaz
+    WORKSPACE_BITBUCKET=oazdev
   else
     DATABASE=magento2
+    WORKSPACE_BITBUCKET=minervafoodsdev
   fi
   cd ${V_PATH}
   CleanVars && clear && sleep 0.2 && ShowMenu
@@ -45,7 +56,7 @@ Main() {
     ;;
 
     6|y)
-      clear && M2InstallStore && GoHome
+      clear && CloneProjects && GoHome
     ;;
 
     7|u)
