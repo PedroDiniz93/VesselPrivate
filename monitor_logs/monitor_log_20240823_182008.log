@@ -1,0 +1,66 @@
+Container: minerva-magento2_tls_1
+  CPU Usage: 0.00%
+  Memory Usage: 1.77MiB / 31.04GiB
+  Net I/O: 105MB / 107MB
+  Block I/O: 4.89MB / 1.74MB
+  PIDs: 2
+Container: minerva-magento2_varnish_1
+  CPU Usage: 0.10%
+  Memory Usage: 48.89MiB / 31.04GiB
+  Net I/O: 107MB / 105MB
+  Block I/O: 110MB / 387MB
+  PIDs: 217
+Container: minerva-magento2_web_1
+  CPU Usage: 0.00%
+  Memory Usage: 1.934MiB / 31.04GiB
+  Net I/O: 75.6MB / 86.3MB
+  Block I/O: 19.9MB / 1.66MB
+  PIDs: 2
+Container: minerva-magento2_fpm_1
+  CPU Usage: 0.00%
+  Memory Usage: 119.4MiB / 31.04GiB
+  Net I/O: 2.54GB / 2.73GB
+  Block I/O: 322MB / 2.29GB
+  PIDs: 6
+Container: minerva-magento2_db_1
+  CPU Usage: 0.03%
+  Memory Usage: 1.701GiB / 31.04GiB
+  Net I/O: 25.9GB / 2.63GB
+  Block I/O: 290GB / 743GB
+  PIDs: 18
+Container: minerva-magento2_cron_1
+  CPU Usage: 0.01%
+  Memory Usage: 8.332MiB / 31.04GiB
+  Net I/O: 548MB / 20.8MB
+  Block I/O: 161MB / 428MB
+  PIDs: 3
+Container: minerva-magento2_fpm_xdebug_1
+  CPU Usage: 0.01%
+  Memory Usage: 1.096GiB / 31.04GiB
+  Net I/O: 384MB / 297MB
+  Block I/O: 248MB / 334MB
+  PIDs: 7
+Container: minerva-magento2_rabbitmq_1
+  CPU Usage: 1.08%
+  Memory Usage: 17.95MiB / 31.04GiB
+  Net I/O: 299kB / 0B
+  Block I/O: 76.6MB / 101MB
+  PIDs: 62
+Container: minerva-magento2_opensearch_1
+  CPU Usage: 0.49%
+  Memory Usage: 1.941GiB / 31.04GiB
+  Net I/O: 199MB / 13.4MB
+  Block I/O: 367MB / 2.06GB
+  PIDs: 203
+Container: minerva-magento2_mailhog_1
+  CPU Usage: 0.00%
+  Memory Usage: 2.75MiB / 31.04GiB
+  Net I/O: 299kB / 0B
+  Block I/O: 10.9MB / 1.51MB
+  PIDs: 7
+Container: minerva-magento2_redis_1
+  CPU Usage: 0.20%
+  Memory Usage: 38.68MiB / 31.04GiB
+  Net I/O: 43.2MB / 843MB
+  Block I/O: 55.7MB / 243MB
+  PIDs: 5

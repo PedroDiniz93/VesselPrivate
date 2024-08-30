@@ -103,6 +103,10 @@ Main() {
         clear && Backup && GoHome
     ;;
 
+    18|qi)
+        clear && Adminer && GoHome
+    ;;
+
     99)
       clear && clearDocker && GoHome
     ;;

@@ -394,6 +394,10 @@ Backup() {
     NotifySuccess "${B_GRE}Processo de backup concluído com sucesso.${NC}\n"
 }
 
-
-
-
+Adminer() {
+    cd utils
+    cd Adminer
+    echo "Opening Adminer at http://127.0.0.41:8082/adminer.php"
+    xdg-open "http://127.0.0.41:8082/adminer.php" &> /dev/null
+    php -S 127.0.0.41:8082 -t .
+}
