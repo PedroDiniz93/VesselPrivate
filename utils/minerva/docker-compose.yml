@@ -22,12 +22,11 @@ services:
       retries: 3
     networks:
       magento:
-        ipv4_address: 172.18.0.99
         aliases:
           - db.magento2.docker
   redis:
     hostname: redis.magento2.docker
-    image: 'redis:7.0'
+    image: 'redis:7.2'
     volumes:
       - '.:/app:delegated'
     ports:
@@ -50,7 +49,7 @@ services:
           - redis.magento2.docker
   opensearch:
     hostname: opensearch.magento2.docker
-    image: 'magento/magento-cloud-docker-opensearch:2.4-1.3.5'
+    image: 'magento/magento-cloud-docker-opensearch:2.4-1.3.6'
     ulimits:
       memlock:
         soft: -1
@@ -67,7 +66,7 @@ services:
           - opensearch.magento2.docker
   fpm:
     hostname: fpm.magento2.docker
-    image: 'magento/magento-cloud-docker-php:8.1-fpm-1.3.5'
+    image: 'magento/magento-cloud-docker-php:8.2-fpm-1.3.6'
     extends: generic
     volumes:
       - '.:/app:delegated'
@@ -80,7 +79,7 @@ services:
         condition: service_healthy
   web:
     hostname: web.magento2.docker
-    image: 'magento/magento-cloud-docker-nginx:1.19-1.3.5'
+    image: 'magento/magento-cloud-docker-nginx:1.19-1.3.6'
     extends: generic
     volumes:
       - '.:/app:delegated'
@@ -97,7 +96,7 @@ services:
         condition: service_started
   varnish:
     hostname: varnish.magento2.docker
-    image: 'magento/magento-cloud-docker-varnish:6.6-1.3.5'
+    image: 'magento/magento-cloud-docker-varnish:6.6-1.3.6'
     networks:
       magento:
         aliases:
@@ -107,7 +106,7 @@ services:
         condition: service_started
   tls:
     hostname: tls.magento2.docker
-    image: 'magento/magento-cloud-docker-nginx:1.19-1.3.5'
+    image: 'magento/magento-cloud-docker-nginx:1.19-1.3.6'
     extends: generic
     networks:
       magento:
@@ -126,7 +125,7 @@ services:
         condition: service_started
   fpm_xdebug:
     hostname: fpm_xdebug.magento2.docker
-    image: 'magento/magento-cloud-docker-php:8.1-fpm-1.3.5'
+    image: 'magento/magento-cloud-docker-php:8.2-fpm-1.3.6'
     extends: generic
     volumes:
       - '.:/app:delegated'
@@ -141,7 +140,7 @@ services:
         condition: service_started
   generic:
     hostname: generic.magento2.docker
-    image: 'magento/magento-cloud-docker-php:8.1-cli-1.3.5'
+    image: 'magento/magento-cloud-docker-php:8.2-cli-1.3.6'
     env_file: ./.docker/config.env
     environment:
       - MAGENTO_RUN_MODE=developer
@@ -149,7 +148,7 @@ services:
       - 'SENDMAIL_PATH=/usr/local/bin/mhsendmail --smtp-addr=mailhog:1025'
   build:
     hostname: build.magento2.docker
-    image: 'magento/magento-cloud-docker-php:8.1-cli-1.3.5'
+    image: 'magento/magento-cloud-docker-php:8.2-cli-1.3.6'
     extends: generic
     volumes:
       - '.:/app:delegated'
@@ -168,7 +167,7 @@ services:
         condition: service_started
   deploy:
     hostname: deploy.magento2.docker
-    image: 'magento/magento-cloud-docker-php:8.1-cli-1.3.5'
+    image: 'magento/magento-cloud-docker-php:8.2-cli-1.3.6'
     extends: generic
     volumes:
       - '.:/app:delegated'
@@ -187,14 +186,14 @@ services:
         condition: service_started
   rabbitmq:
     hostname: rabbitmq.magento2.docker
-    image: 'rabbitmq:3.9'
+    image: 'rabbitmq:3.13'
     networks:
       magento:
         aliases:
           - rabbitmq.magento2.docker
   mailhog:
     hostname: mailhog.magento2.docker
-    image: 'magento/magento-cloud-docker-mailhog:1.0-1.3.5'
+    image: 'magento/magento-cloud-docker-mailhog:1.0-1.3.6'
     ports:
       - '1025:1025'
       - '8025:8025'
@@ -204,7 +203,7 @@ services:
           - mailhog.magento2.docker
   cron:
     hostname: cron.magento2.docker
-    image: 'magento/magento-cloud-docker-php:8.1-cli-1.3.5'
+    image: 'magento/magento-cloud-docker-php:8.2-cli-1.3.6'
     extends: generic
     command: run-cron
     environment:
