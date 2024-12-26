@@ -60,6 +60,25 @@ verifyPackages() {
   if VerifyN98MageRun "$1" == 0 ; then echo -e "$B_GRE n98-magerun2 Installed $NC"; else echo -e "$B_RED n98-magerun2 Not Installed, execute commands to install: $NC"; echo -e " wget https://files.magerun.net/n98-magerun2.phar"; echo -e " chmod +x ./n98-magerun2.phar"; echo -e " sudo cp ./n98-magerun2.phar /usr/local/bin/"; echo -e " n98-magerun2.phar –version"; fi
   if VerifyGit "$1" == 1 ; then echo -e "$B_GRE Git Installed $NC"; else echo -e "$B_RED Git Not Installed, execute command: sudo apt install git $NC"; fi
   if VerifyPV "$1" == 0 ; then echo -e "$B_GRE pv Installed $NC"; else echo -e "$B_RED pv Not Installed, execute command: sudo apt install pv $NC"; fi
+  if VerifyNpm "$1" == 0 ; then
+     echo -e "$B_GRE npm Installed - Node.js $(node -v), npm $(npm -v) $NC";
+  else
+     echo -e "$B_RED npm or Node.js Not Installed, execute commands to install: $NC";
+     echo -e " sudo apt update";
+     echo -e " sudo apt install -y nodejs npm";
+     echo -e " node -v && npm -v";
+  fi
+}
+
+VerifyNpm() {
+  if command -v npm >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
+    npm_version=$(npm -v)
+    node_version=$(node -v)
+    if [[ -n "$npm_version" && -n "$node_version" ]]; then
+      return 0
+    fi
+  fi
+  return 1
 }
 
 MinervaStart() {
@@ -217,21 +236,83 @@ CommandsCompile() {
 }
 
 GruntInstall() {
-  Notify "Realizando instalação do grunt"
-  cd utils
-  cp themes.js "$PROJECT"/app/etc
-  cp package.json "$PROJECT"
-  cp Gruntfile.js "$PROJECT"
-  cp grunt-config.json "$PROJECT"
-  docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "npm install"
+    Notify "Realizando instalação do Grunt"
+
+     cp "$PROJECT/dev/tools/grunt/package.json.sample" "$PROJECT/package.json"
+
+     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "apt update && apt install -y nodejs npm"
+     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "npm install -g grunt-cli"
+     docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "npm install"
+
+     Notify "Grunt instalado e configurado com sucesso"
 }
 
 GruntExec() {
-  NotifyAsk "Digite o nome do tema"
-  read THEME_NAME
-  Notify "Compilando..."
-  docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "grunt exec:$THEME_NAME && grunt less:$THEME_NAME && grunt watch:$THEME_NAME"
+ Notify "Mapeando temas disponíveis no Magento..."
+
+ THEMES_FILE="$PROJECT/dev/tools/grunt/configs/themes.js"
+
+ THEMES_DIR="$PROJECT/app/design/frontend"
+ if [ ! -d "$THEMES_DIR" ]; then
+   NotifyError "Diretório de temas não encontrado em $THEMES_DIR. Verifique seu projeto."
+   exit 1
+ fi
+
+ echo "'use strict';" > "$THEMES_FILE"
+ echo "" >> "$THEMES_FILE"
+ echo "/**" >> "$THEMES_FILE"
+ echo " * Configuração dinâmica de temas" >> "$THEMES_FILE"
+ echo " */" >> "$THEMES_FILE"
+ echo "module.exports = {" >> "$THEMES_FILE"
+
+ THEMES_ARRAY=()
+ INDEX=0
+
+ for VENDOR in $(find "$THEMES_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do
+   for THEME in $(find "$THEMES_DIR/$VENDOR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do
+     THEME_KEY=$(echo "$VENDOR/$THEME" | sed 's/\//_/g') # Nome único para o tema
+     THEMES_ARRAY+=("$THEME_KEY")
+     echo "    $THEME_KEY: {" >> "$THEMES_FILE"
+     echo "        area: 'frontend'," >> "$THEMES_FILE"
+     echo "        name: '$VENDOR/$THEME'," >> "$THEMES_FILE"
+     echo "        locale: 'en_US'," >> "$THEMES_FILE"
+     echo "        files: [" >> "$THEMES_FILE"
+     echo "            'css/styles-m'," >> "$THEMES_FILE"
+     echo "            'css/styles-l'" >> "$THEMES_FILE"
+     echo "        ]," >> "$THEMES_FILE"
+     echo "        dsl: 'less'" >> "$THEMES_FILE"
+     echo "    }," >> "$THEMES_FILE"
+     ((INDEX++))
+   done
+ done
+
+ sed -i '$ s/,$//' "$THEMES_FILE"
+ echo "};" >> "$THEMES_FILE"
+
+ if [ ${#THEMES_ARRAY[@]} -eq 0 ]; then
+   NotifyError "Nenhum tema foi encontrado no diretório $THEMES_DIR."
+   exit 1
+ fi
+
+ echo "Temas disponíveis:"
+ for i in "${!THEMES_ARRAY[@]}"; do
+   echo " [$i] ${THEMES_ARRAY[$i]}"
+ done
+
+ NotifyAsk "Digite o número do tema desejado:"
+ read THEME_INDEX
+
+ if [[ ! "$THEME_INDEX" =~ ^[0-9]+$ ]] || [[ "$THEME_INDEX" -lt 0 ]] || [[ "$THEME_INDEX" -ge "${#THEMES_ARRAY[@]}" ]]; then
+   NotifyError "Opção inválida. Escolha um número da lista."
+   exit 1
+ fi
+
+ THEME_NAME=${THEMES_ARRAY[$THEME_INDEX]}
+
+ Notify "Compilando tema: $THEME_NAME..."
+ docker exec -it "${CONTAINER}"_fpm_1 /bin/bash -c "grunt clean:$THEME_NAME && grunt exec:$THEME_NAME && grunt less:$THEME_NAME && grunt watch:$THEME_NAME"
 }
+
 
 ChangePasswordAllCustomers() {
   Notify "Alterando todos as senhas dos customers para [teste]"
