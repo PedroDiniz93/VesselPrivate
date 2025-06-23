@@ -203,11 +203,14 @@ ReadHost() {
 AddHost() {
   Notify "Inserindo url no Host"
   if [[ $(grep -R "^127.0.0.1 $1" /etc/hosts | wc -l) == 0 ]]; then
+    local pass
     if [ -z "$ROOT_PASSWORD" ]; then
       echo -e "[sudo] password for $USER:"
-      read -s PASSWORD
+      read -s pass
+    else
+      pass="$ROOT_PASSWORD"
     fi
-    echo $ROOT_PASSWORD | sudo -S sh -c "echo \"\n127.0.0.1 $1\" >> /etc/hosts" >/dev/null
+    echo "$pass" | sudo -S sh -c "echo -e '\n127.0.0.1 $1' >> /etc/hosts" >/dev/null
     NotifySuccess "Inserido 127.0.0.1 $1"
   else
     NotifyInfo "Host já existente"
